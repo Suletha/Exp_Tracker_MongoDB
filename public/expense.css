@@ -33,9 +33,9 @@
   
   .container {
     margin: auto;
-    width: 500px;
+    width: 150px; /* Adjusted width to half */
     overflow: auto;
-    padding: 3rem 2rem;
+    padding: 1.5rem; /* Adjusted padding */
   }
   
   #my-form {
@@ -55,21 +55,21 @@
     border: 1px solid #ccc;
   }
   
-  .btn {
+  
+.btn {
     display: block;
     width: 100%;
     padding: 10px 15px;
     border: 0;
-    background: #333;
+    background: #4CAF50; /* Green color */
     color: #fff;
     border-radius: 5px;
     margin: 5px 0;
   }
   
   .btn:hover {
-    background: #444;
+    background: #45a049; /* Darker green on hover */
   }
-  
   .bg-dark {
     background: #333;
     color: #fff;
