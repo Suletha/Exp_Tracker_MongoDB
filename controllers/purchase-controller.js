@@ -7,8 +7,8 @@ const sequelize = require("../util/database");
 exports.purchasePremium = async (req, res, next) => {
   try {
     var rzp = new Razorpay({
-      key_id: "rzp_test_Xgq3eix2NfBDHd",
-      key_secret: "VjD8EMpJV59FTeW2aVSBfcmU",
+      key_id: "rzp_test_JFpUUEdKARqdiq",
+      key_secret: "D9ah0dDLKYr8HuDMXDA1NMHp",
     });
     const amount = 2500;
 
@@ -76,19 +76,7 @@ exports.checkPremium = async (req, res, next) => {
 
 exports.getLeaderBoard = async (req, res, next) => {
   try {
-    const expenses = await Expense.findAll({
-      attributes: [
-        [sequelize.fn("SUM", sequelize.col("expense")), "totalExpenses"],
-        "userId",
-      ],
-      include: [
-        {
-          model: User,
-          attributes: ["name"],
-        },
-      ],
-      group: ["userId"],
-    });
+    const expenses = await User.findAll();
     res.status(200).json(expenses);
   } catch (err) {
     console.error(err);
