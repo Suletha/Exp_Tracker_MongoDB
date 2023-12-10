@@ -216,21 +216,21 @@ async function leaderBoard() {
     );
     const userExpenses = response.data;
     console.log(userExpenses);
+    const leaderBoardList = document.querySelector("#leaderBoard");
+    leaderBoardList.innerHTML = "";
     for (let i = 0; i < userExpenses.length; i++)
-      showLeaderBoard(userExpenses[i]);
+      showLeaderBoard(leaderBoardList, userExpenses[i]);
   } catch (error) {
     console.error("Error fetching user expenses:", error);
   }
 }
 
-function showLeaderBoard(userExpense) {
+function showLeaderBoard(leaderBoardList, userExpense) {
   const li = document.createElement("li");
   li.appendChild(
     document.createTextNode(
-      `Name - ${userExpense.user.name} -- Total Expenses - ${userExpense.totalExpenses}`
+      `Name - ${userExpense.name} -- Total Expenses - ${userExpense.totalExpense}`
     )
   );
   leaderBoardList.appendChild(li);
-
-  expenseList.appendChild(li);
 }
