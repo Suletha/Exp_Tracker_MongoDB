@@ -1,10 +1,13 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const secretKey = "yourSecretKey";
-const nodemailer = require("nodemailer");
+const secretKey = process.env.JWT_KEY;
 
 const User = require("../models/user");
+const DownloadedFile = require("../models/filesdownloaded");
+const ForgetPasswordRequest = require("../models/forgetpasswordrequest");
 const sequelize = require("../util/database");
+const S3services = require("../services/S3services");
+const MailServices = require("../services/nodemailerservices");
 
 exports.postUsers = async (req, res, next) => {
   const name = req.body.name;
@@ -66,35 +69,57 @@ exports.getUser = async (req, res, next) => {
 exports.forgetpassword = async (req, res, next) => {
   const email = req.body.email;
   console.log(email);
-  const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: "baskin.notif@gmail.com",
-      pass: "kgjtkdyobgffnqjg",
-      authMethod: "LOGIN",
-    },
+  const user = await User.findOne({ where: { email: email } });
+  const forgetpasswordrequest = await ForgetPasswordRequest.create({
+    userId: user.id,
   });
-  const mailConfirm = {
-    from: "baskin.notif@gmail.com",
-    to: email,
-    subject: "Change your password",
-    html: `
-      <html>
-        <head>
-        </head>
-        <body>
-          <p>He He He</p>
-        </body>
-      </html>  `,
-  };
-  transporter.sendMail(mailConfirm, (err, info) => {
-    if (err) {
-      console.log(err);
-      res.status(400).json({ message: "failed" });
-    } else {
-      res.status(200).json({ message: "success" });
+  const uuid = forgetpasswordrequest.id;
+  const info = await MailServices.forgetpasswordmail(email, uuid);
+  console.log(info);
+  if (info === "") {
+    res.status(400).json({ message: "Unable to send mail" });
+  } else {
+    res.status(200).json({ message: "mail send successfully" });
+  }
+};
+
+exports.download = async (req, res, next) => {
+  const ispremium = req.user.ispremium;
+  if (ispremium === true) {
+    const expenses = await req.user.getExpenses();
+    const stringifiedExpenses = JSON.stringify(expenses);
+    const filename = `Expense${req.user.id}/${new Date()}.txt`;
+    try {
+      const fileUrl = await S3services.uploadToS3(
+        stringifiedExpenses,
+        filename
+      );
+      const filedetails = await DownloadedFile.create({
+        location: fileUrl,
+        userId: req.user.id,
+      });
+      console.log(fileUrl);
+      res.status(200).json({ fileUrl, success: true });
+    } catch (err) {
+      res
+        .status(500)
+        .json({ fileUrl: "", success: "false", error: "File not created" });
     }
-  });
+  } else {
+    res
+      .status(500)
+      .json({ fileUrl: "", success: "false", error: "Unauthorized" });
+  }
+};
+
+exports.getFiles = async (req, res, next) => {
+  try {
+    const files = await DownloadedFile.findAll({
+      where: { userId: req.user.id },
+    });
+    console.log(files);
+    res.status(200).json(files);
+  } catch (err) {
+    res.status(500).json({ err });
+  }
 };
