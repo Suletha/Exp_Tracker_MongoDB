@@ -8,6 +8,7 @@ exports.forgetpasswordmail = async (email, uuid) => {
     auth: {
       user: process.env.NODEMAILER_USER,
       pass: process.env.NODEMAILER_PASS,
+
       authMethod: "LOGIN",
     },
   });

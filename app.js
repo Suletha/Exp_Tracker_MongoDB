@@ -1,7 +1,13 @@
+const path = require("path");
+const fs = require("fs");
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const helmet = require("helmet");
+const morgan = require("morgan");
 require("dotenv").config();
+//console.log(process.env.DATABASE_NAME)
 
 const sequelize = require("./util/database");
 const userRoutes = require("./routes/user-routes");
@@ -17,7 +23,18 @@ const ForgetpasswordRequest = require("./models/forgetpasswordrequest");
 const DownloadedFile = require("./models/filesdownloaded");
 
 const app = express();
+// app.use((req,res,next)=> {
+//   res.sendFile(`signup.html`,{root:`public`})
 
+// })
+
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, "access.log"),
+  { flags: "a" }
+);
+
+app.use(helmet());
+app.use(morgan("combined", { stream: accessLogStream }));
 app.use(cors());
 app.use(bodyParser.json({ extended: false }));
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -44,7 +61,7 @@ sequelize
   .sync()
   .then(() => {
     // Start the server
-    app.listen(3000);
+    app.listen(process.env.PORT || 3000);
   })
   .catch((error) => {
     console.error(error);
