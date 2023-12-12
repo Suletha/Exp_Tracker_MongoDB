@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-
+//console.log( process.env.NODEMAILER_USER,process.env.NODEMAILER_PASS)
 exports.forgetpasswordmail = async (email, uuid) => {
   const transporter = nodemailer.createTransport({
     host: process.env.NODEMAILER_HOST,
