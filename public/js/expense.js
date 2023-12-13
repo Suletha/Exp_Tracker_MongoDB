@@ -134,7 +134,9 @@ async function editItem(e) {
     if (confirm("Are You Sure?")) {
       try {
         const li = e.target.parentElement;
-        const res = await axios.get(`http://localhost:3000/expense/${li.id}`);
+        const res = await axios.get(
+          `http://localhost:3000/expense/${li.id}`
+        );
         expense.value = res.data.expense;
         desc.value = res.data.desc;
         cat.value = res.data.cat;
@@ -184,6 +186,7 @@ async function payments(e) {
       alert("you are a premium user now");
       premiumUser.innerHTML = "<span>You are premium user now</span>";
       getPremiumStatus();
+      window.location.reload();
     },
     modal: {
       ondismiss: async function () {
@@ -215,27 +218,29 @@ function logout() {
   alert("You are logged out successfully");
   window.location.href = "login.html";
 }
-
 async function leaderBoard() {
   try {
-    const response = await axios.get(
-      "http://localhost:3000/purchase/getleaderboard"
-    );
-    const userExpenses = response.data;
+    const response = await axios.get("http://localhost:3000/purchase/getleaderboard");
+    let userExpenses = response.data;
+
+    // Sort the userExpenses array in descending order based on totalExpense
+    userExpenses.sort((a, b) => b.totalExpense - a.totalExpense);
+
     console.log(userExpenses);
+
     const leaderBoardList = document.querySelector("#leaderBoard");
     const hr = document.createElement("hr");
-    leaderBoardList.parentNode.parentNode.insertBefore(
-      hr,
-      leaderBoardList.parentNode
-    );
+    leaderBoardList.parentNode.parentNode.insertBefore(hr, leaderBoardList.parentNode);
     leaderBoardList.innerHTML = "";
-    for (let i = 0; i < userExpenses.length; i++)
+
+    for (let i = 0; i < userExpenses.length; i++) {
       showLeaderBoard(leaderBoardList, userExpenses[i]);
+    }
   } catch (error) {
     console.error("Error fetching user expenses:", error);
   }
 }
+
 
 function showLeaderBoard(leaderBoardList, userExpense) {
   const li = document.createElement("li");
@@ -249,7 +254,9 @@ function showLeaderBoard(leaderBoardList, userExpense) {
 
 async function download() {
   try {
-    const response = await axios.get("http://localhost:3000/users/download");
+    const response = await axios.get(
+      "http://localhost:3000/users/download"
+    );
     if (response.status === 200) {
       // The backend is sending a download link
       // which if we open in the browser, the file would download
@@ -267,7 +274,7 @@ async function download() {
 
 // showfilesBtn.addEventListener("click", async () => {
 //   try {
-//     const response = await axios.get("http://localhost:3000/users/getfiles");
+//     const response = await axios.get("http://52.90.255.137:3000/users/getfiles");
 //     const files = response.data;
 //     console.log(files);
 //   } catch (error) {
@@ -282,8 +289,21 @@ showfilesBtn.addEventListener("click", async () => {
     const response = await axios.get(
       `http://localhost:3000/users/getfiles?page=${currentPage}`
     );
-    const files = response.data;
-    console.log(files);
+    const files = response.data.files;
+    const count = response.data.totalFiles;
+    console.log(files, count);
+    const childCount = fileTableContainer.children.length;
+    if (childCount == 3) {
+      let i = 2;
+      while (i != 0) {
+        const lastChild = fileTableContainer.lastElementChild;
+        if (lastChild) {
+          // Remove the last child element
+          fileTableContainer.removeChild(lastChild);
+        }
+        i--;
+      }
+    }
 
     const tableBody = document.getElementById("fileTableBody");
     tableBody.innerHTML = "";
@@ -357,8 +377,18 @@ async function updateFilesTable() {
     const response = await axios.get(
       `http://localhost:3000/users/getfiles?page=${currentPage}`
     );
-    const files = response.data;
+    const files = response.data.files;
     console.log(files);
+
+    let i = 2;
+    while (i != 0) {
+      const lastChild = fileTableContainer.lastElementChild;
+      if (lastChild) {
+        // Remove the last child element
+        fileTableContainer.removeChild(lastChild);
+      }
+      i--;
+    }
 
     // Clear previous table and populate with new files
     const tableBody = document.getElementById("fileTableBody");
@@ -394,10 +424,6 @@ async function updateFilesTable() {
       tableBody.appendChild(row);
     });
 
-    // Update pagination buttons
-    prevButton.disabled = currentPage === 1;
-    nextButton.disabled = files.length < 5;
-
     // Add previous and next buttons for pagination
     fileTableContainer.classList.add("pagination");
 
@@ -421,10 +447,12 @@ async function updateFilesTable() {
       updateFilesTable();
     });
 
+    // Update pagination buttons
+    prevButton.disabled = currentPage === 1;
+    nextButton.disabled = files.length < 5;
+
     fileTableContainer.appendChild(prevButton);
     fileTableContainer.appendChild(nextButton);
-    const hr = document.createElement("hr");
-    fileTableContainer.parentNode.insertBefore(hr, fileTableContainer);
     fileTableContainer.style.display = "block";
     fileTableContainer.style.paddingLeft = "2rem";
   } catch (error) {

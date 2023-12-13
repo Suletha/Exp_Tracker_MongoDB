@@ -1,3 +1,4 @@
+//IMPORTING BUITT-IN MODULES
 const path = require("path");
 const fs = require("fs");
 
@@ -8,12 +9,16 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 require("dotenv").config();
 
+//IMPORTING ROUTES FROM SPECIFIC FILES
+
 const sequelize = require("./util/database");
 const userRoutes = require("./routes/user-routes");
 const expenseRoutes = require("./routes/expense-routes");
 const purchaseRoutes = require("./routes/purchase-routes");
 const passwordRoutes = require("./routes/password-routes");
 const authenticationMiddleware = require("./util/authentication");
+
+//IMPORTING MODELS FROM SPECIFIC FILES
 
 const User = require("./models/user");
 const Expense = require("./models/expense");
@@ -23,16 +28,22 @@ const DownloadedFile = require("./models/filesdownloaded");
 
 const app = express();
 
+//TO LOG HTTP REQ TO A FILE
+
 const accessLogStream = fs.createWriteStream(
   path.join(__dirname, "access.log"),
   { flags: "a" }
 );
+
+//IMPLIMENTATION OF MW'S
 
 app.use(helmet());
 app.use(morgan("combined", { stream: accessLogStream }));
 app.use(cors());
 app.use(bodyParser.json({ extended: false }));
 app.use(bodyParser.urlencoded({ extended: false }));
+
+// TO DESIDE WHAT SHOULD ALLOW IN BROWSER
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
@@ -43,13 +54,19 @@ app.use((req, res, next) => {
   );
   next();
 });
+
+// TO SERVE THE STATIC FILES
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/public/js", express.static(path.join(__dirname, "public/js")));
+
+//DEFINING AND HANDLING THE ROUTES
 
 app.use("/password", passwordRoutes);
 app.use("/users", userRoutes);
 app.use("/purchase", authenticationMiddleware, purchaseRoutes);
 app.use(expenseRoutes);
+
+//DEFINING ASSOCIATIONS
 
 User.hasMany(Expense);
 Expense.belongsTo(User);
